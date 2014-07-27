@@ -1,8 +1,8 @@
 # RStudio
-.Rhistory
-.RData
-.Rproj
-.Rproj.user
-.zip
-.rar
-.csv
+*.Rhistory
+*.RData
+*.Rproj
+*.Rproj.user
+*.zip
+*.rar
+*.csv
