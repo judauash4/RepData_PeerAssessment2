@@ -1,25 +1,33 @@
-inputFile <- "repdata_data_StormData.csv";
+inputFileName <- "repdata_data_StormData.csv.bz2";
 
-con  <- file(inputFile, open = "r");
+myData <- read.table(file=bzfile(inputFileName),
+                     quote='"',
+                     na.strings="",
+                     header=TRUE, 
+                     sep=",",
+                     fill=TRUE, 
+                     stringsAsFactors=FALSE);
 
-myData <- data.frame();
-
-currentLine = 1;
-while (length(oneLine <- readLines(con, n = 1, warn = FALSE)) > 0) {
-  myVector <- unlist(strsplit(oneLine, ","));
-  
-  if(currentLine == 1) {
-    # do nothing;
-  } else if(length(myVector) == 37) {
-    myData <- c(myData,myVector);
-  } else if(currentLine == 100) {
-    break;
-  }
-  
-  currentLine <- currentLine + 1;
-} 
-
-close(con);
+# con  <- file(inputFile, open="r");
+# # con <- bzfile(inputFile, open="r");
+# 
+# myList <- list();
+# 
+# # reading data line by line and validate the data in 37 column format is time consuming
+# currentLine <- 1;
+# while (length(oneLine <- readLines(con, n = 1, warn = FALSE)) > 0) {
+#   oneLine <- strsplit(oneLine, ",")[[1]];
+#   
+#   if(currentLine != 1 && length(oneLine) == 37) {
+#     myList <- rbind(myList,oneLine);
+#   }
+#   
+#   print(paste("@line:", currentLine, ",isValidFormat?", length(oneLine) == 37));
+#   
+#   currentLine <- currentLine + 1;
+# } 
+# 
+# close(con);
 
 # 48 types of event
 evtType <- c("Astronomical Low Tide","Avalanche","Blizzard","Coastal Flood",
@@ -29,30 +37,32 @@ evtType <- c("Astronomical Low Tide","Avalanche","Blizzard","Coastal Flood",
              "Hail","Heat","Heavy Rain","Heavy Snow","High Surf","High Wind",
              "Hurricane/Typhoon","Ice Storm","Lakeshore Flood","Lake-Effect Snow",
              "Lightning","Marine Hail","Marine High Wind","Marine Strong Wind",
-             "Marine Thunderstorm Wind","Rip Current","Seiche","Sleet","Storm Tide",
-             "Strong Wind","Thunderstorm Wind","Tornado","Tropical Depression",
+             "Marine Thunderstorm/Tstm Winds","Rip Current","Seiche","Sleet","Storm Tide",
+             "Strong Wind","Thunderstorm/Tstm Wind","Tornado","Tropical Depression",
              "Tropical Storm","Tsunami","Volcanic Ash","Waterspout","Wildfire",
              "Winter Storm","Winter Weather");
 
 myDmgData <- data.frame();
 
 # looping each event and summarize its damage
-for(i in length(evtType)) {
+for(i in 1:length(evtType)) {
+  # type <- "Thunderstorm/Tstm Wind";
   type <- evtType[i];
-  # type <- "TORNADO";
+  type <- gsub("/","|",type);
+  type <- paste("(.*)+",type,"(.*)+",sep="");
   
-  subData <-subset(myData, grepl(type, myData[8], ignore.case = T));
+  subData <-subset(myData, grepl(type, myData[,8], ignore.case = T));
   
-  fatalities <- sum(as.numeric(subData[23]));
-  injuries <- sum(as.numeric(subData[24]));
-  propDmg <- sum(as.numeric(subData[25]));
-  cropDmg <- sum(as.numeric(subData[27]));
+  fatalities <- sum(as.numeric(subData[,23]),na.rm=TRUE);
+  injuries <- sum(as.numeric(subData[,24]),na.rm=TRUE);
+  propDmg <- sum(as.numeric(subData[,25]),na.rm=TRUE);
+  cropDmg <- sum(as.numeric(subData[,27]),na.rm=TRUE);
   
-  newData <- data.frame(EvtType=type,
+  newData <- data.frame(EvtType=evtType[i],
                            Fatalities=fatalities,
                            Injuries=injuries,
                            PropertyDmg=propDmg,
-                           CropDmg=cropDmg)
+                           CropDmg=cropDmg)  
   
   myDmgData <- rbind(myDmgData, newData);
 }
